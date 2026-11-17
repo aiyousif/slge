@@ -62,6 +62,15 @@ activities = [
     ("sleep_hours", "Sleep (hours/day)", 8.0),
 ]
 
+def clamp_daily_hours():
+    """Keep the ordered activity inputs at 24 hours or less."""
+    remaining = 24.0
+    for key, _, _ in activities:
+        value = float(st.session_state.get(key, 0.0))
+        capped_value = min(max(value, 0.0), remaining)
+        st.session_state[key] = capped_value
+        remaining = max(0.0, round(remaining - capped_value, 1))
+
 # Calculate all limits before rendering widgets so every value updates together
 for key, _, default in activities:
     if key not in st.session_state:
@@ -82,20 +91,25 @@ with st.container(border=True):
     with col1:
         study = st.number_input("Study (hours/day)", min_value=0.0,
             max_value=max_hours["study_hours"] or 24.0,
-            step=0.5, key="study_hours", disabled=max_hours["study_hours"] == 0)
+            step=0.5, key="study_hours", disabled=max_hours["study_hours"] == 0,
+            on_change=clamp_daily_hours)
         extracurricular = st.number_input("Extracurricular activities (hours/day)", min_value=0.0, max_value=max_hours["extracurricular_hours"] or 24.0, step=0.5,
-            key="extracurricular_hours", disabled=max_hours["extracurricular_hours"] == 0)
+            key="extracurricular_hours", disabled=max_hours["extracurricular_hours"] == 0,
+            on_change=clamp_daily_hours)
     with col2:
         social = st.number_input("Social activities (hours/day)", min_value=0.0,
             max_value=max_hours["social_hours"] or 24.0, step=0.5,
-            key="social_hours", disabled=max_hours["social_hours"] == 0)
+            key="social_hours", disabled=max_hours["social_hours"] == 0,
+            on_change=clamp_daily_hours)
         physical = st.number_input("Physical activity (hours/day)", min_value=0.0,
             max_value=max_hours["physical_hours"] or 24.0, step=0.5,
-            key="physical_hours", disabled=max_hours["physical_hours"] == 0)
+            key="physical_hours", disabled=max_hours["physical_hours"] == 0,
+            on_change=clamp_daily_hours)
     
     sleep = st.number_input("Sleep (hours/day)", min_value=0.0,
         max_value=max_hours["sleep_hours"] or 24.0, step=0.5,
-        key="sleep_hours", disabled=max_hours["sleep_hours"] == 0)
+        key="sleep_hours", disabled=max_hours["sleep_hours"] == 0,
+        on_change=clamp_daily_hours)
 
     result_area = st.empty()
     submitted = st.button("Estimate GPA", type="primary", use_container_width=True)
